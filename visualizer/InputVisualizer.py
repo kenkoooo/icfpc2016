@@ -3,8 +3,14 @@ from fractions import Fraction
 import matplotlib.pyplot as plt
 
 # 表示範囲はこのくらいが良さそう
-plt.xlim([-0.2, 1.2])
-plt.ylim([-0.2, 1.2])
+plt.xlim([-0.5, 1.5])
+plt.ylim([-0.5, 1.5])
+
+# 縦横比を揃えるおまじない
+plt.gca().set_aspect('equal', adjustable='box')
+
+# グリッド
+plt.grid(which='major', color='black', linestyle='dashed')
 
 
 def plot(polygons, skeleton):
@@ -14,11 +20,14 @@ def plot(polygons, skeleton):
     for edge in skeleton:
         line = plt.Polygon(edge, closed=None, fill=None, edgecolor='r')
         plt.gca().add_patch(line)
-
     plt.show()
 
 
-def run():
+def read_input():
+    """
+    標準入力から入力を読みだす。
+    多角形とスケルトンのリストにして返す。
+    """
     n = int(input())
     polygons = []
     for i in range(n):
@@ -42,6 +51,11 @@ def run():
             y = Fraction(xy[1])
             edge.append([x, y])
         skeleton.append(edge)
+    return polygons, skeleton
+
+
+def run():
+    polygons, skeleton = read_input()
     plot(polygons, skeleton)
 
 
