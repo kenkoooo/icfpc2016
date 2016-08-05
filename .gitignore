@@ -1,3 +1,6 @@
 # IntelliJ の設定ファイルをスルー
 .idea
 *.iml
+
+# Mac のクソファイルをスルー
+*.DS_Store
