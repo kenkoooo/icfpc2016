@@ -31,7 +31,7 @@ def input_file_name(problem_id):
     :param problem_id: 問題 id
     :return: ファイル名
     """
-    return "problem_{problem_id}.txt".format(problem_id=problem_id)
+    return "problem_{problem_id}.txt".format(problem_id=format(problem_id, "05"))
 
 
 def get_latest_snapshot_hash():
