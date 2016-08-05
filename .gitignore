@@ -1,0 +1,3 @@
+# IntelliJ の設定ファイルをスルー
+.idea
+*.iml
