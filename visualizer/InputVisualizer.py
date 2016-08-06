@@ -48,11 +48,16 @@ def plot(polygons, skeleton, center):
     # グリッド
     plt.grid(which='major', color='black', linestyle='dashed')
 
+    holes = []
     for polygon in polygons:
-        if not is_real_area(polygon):
-            continue
         polygon = [[p[0] - center[0], p[1] - center[1]] for p in polygon]
-        plt.gca().add_patch(plt.Polygon(polygon, alpha=0.3))
+        if not is_real_area(polygon):
+            holes.append(polygon)
+        else:
+            plt.gca().add_patch(plt.Polygon(polygon, alpha=0.3))
+
+    for polygon in holes:
+        plt.gca().add_patch(plt.Polygon(polygon, alpha=1.0, color="w"))
 
     for edge in skeleton:
         edge = [[p[0] - center[0], p[1] - center[1]] for p in edge]
