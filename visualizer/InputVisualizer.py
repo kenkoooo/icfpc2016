@@ -21,12 +21,15 @@ def e_format(d):
 
 
 def is_real_area(polygon):
-    points = ConvexHull(polygon).vertices
-    n = len(points)
-    cnt = 0
-    for i in range(n):
-        if points[(i + 1) % n] > points[i]:
-            cnt += 1
+    try:
+        points = ConvexHull(polygon).vertices
+        n = len(points)
+        cnt = 0
+        for i in range(n):
+            if points[(i + 1) % n] > points[i]:
+                cnt += 1
+    except:
+        return True
     return cnt > 1
 
 
