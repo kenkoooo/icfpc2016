@@ -6,16 +6,28 @@ from fractions import Fraction
 import matplotlib.pyplot as plt
 
 
+def e_format(d):
+    """
+    指数表記にする
+    """
+    cnt = 0
+    while d > 10:
+        cnt += 1
+        d /= 10
+    d = float(d)
+    return "{0:.2f}".format(d) + "e+" + str(cnt)
+
+
 def plot(polygons, skeleton, center):
     if abs(center[0]) < 2 ** 60 and abs(center[1]) < 2 ** 60:
-        # オーバーフリーしない時は今までどおり
-        plt.xlim([center[0] - 2.0, center[0] + 2.0])
-        plt.ylim([center[1] - 2.0, center[1] + 2.0])
+        # オーバーフローしない時は今までどおり
+        plt.xlim([center[0] - 1.5, center[0] + 1.5])
+        plt.ylim([center[1] - 1.5, center[1] + 1.5])
         center = [0, 0]
     else:
         # オーバーフローするとき
-        plt.xlim([- 2.0, 2.0])
-        plt.ylim([- 2.0, 2.0])
+        plt.xlim([- 1.5, 1.5])
+        plt.ylim([- 1.5, 1.5])
 
     # 縦横比を揃えるおまじない
     plt.gca().set_aspect('equal', adjustable='box')
@@ -31,6 +43,13 @@ def plot(polygons, skeleton, center):
         edge = [[p[0] - center[0], p[1] - center[1]] for p in edge]
         line = plt.Polygon(edge, closed=None, fill=None, edgecolor='r')
         plt.gca().add_patch(line)
+
+    # オーバーフローする時は画像に書く
+    if center[0] != 0.0 or center[1] != 0.0:
+        s = e_format(center[0]) + ", " + e_format(center[1])
+        plt.xlabel(s)
+
+    return center
 
 
 def read_input(lines):
@@ -96,14 +115,15 @@ def run(args):
         data = f.read()
         lines = data.split("\n")
         polygons, skeleton, center = read_input(lines)
-        plot(polygons, skeleton, center)
+        center = plot(polygons, skeleton, center)
         plt.savefig(path)
         plt.close()
 
-        c = {"x": str(center[0]), "y": str(center[1])}
-        f = open(path.replace(".png", "_center.json"), "w", encoding="UTF-8")
-        json.dump(c, f)
-        f.close()
+        if center[0] != 0.0 or center[1] != 0.0:
+            c = {"x": str(center[0]), "y": str(center[1])}
+            f = open(path.replace(".png", "_center.json"), "w", encoding="UTF-8")
+            json.dump(c, f)
+            f.close()
 
 
 if __name__ == '__main__':
