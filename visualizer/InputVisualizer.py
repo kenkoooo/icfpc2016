@@ -7,8 +7,15 @@ import matplotlib.pyplot as plt
 
 
 def plot(polygons, skeleton, center):
-    plt.xlim([-2.0, 2.0])
-    plt.ylim([-2.0, 2.0])
+    if abs(center[0]) < 2 ** 60 and abs(center[1]) < 2 ** 60:
+        # オーバーフリーしない時は今までどおり
+        plt.xlim([center[0] - 2.0, center[0] + 2.0])
+        plt.ylim([center[1] - 2.0, center[1] + 2.0])
+        center = [0, 0]
+    else:
+        # オーバーフローするとき
+        plt.xlim([- 2.0, 2.0])
+        plt.ylim([- 2.0, 2.0])
 
     # 縦横比を揃えるおまじない
     plt.gca().set_aspect('equal', adjustable='box')
@@ -83,7 +90,7 @@ def run(args):
         if os.path.exists(path):
             # 既に画像がある場合は上書きしない
             print(path + " already exists.")
-            # continue
+            continue
 
         print("Loading " + filename + " ...")
         data = f.read()
