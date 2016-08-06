@@ -74,7 +74,7 @@ def run(args):
     print("There are " + str(len(problems)) + " problems.")
 
     # 保存先のディレクトリが存在しなければ作成
-    path = args.d
+    path = args.o
     if not os.path.exists(path):
         os.mkdir(path)
     exist_files = os.listdir(path)
@@ -96,5 +96,5 @@ def run(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", default="./problems/", help="出力先のディレクトリを指定してね")
+    parser.add_argument("-o", default="problems/", help="出力先のディレクトリを指定してね")
     run(parser.parse_args())
