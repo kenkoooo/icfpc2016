@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 import os
 from fractions import Fraction
 
@@ -16,6 +17,17 @@ def e_format(d):
         d /= 10
     d = float(d)
     return "{0:.2f}".format(d) + "e+" + str(cnt)
+
+
+def is_real_area(polygon):
+    o = polygon[0]
+    a = polygon[1]
+    b = polygon[2]
+    a = [a[0] - o[0], a[1] - o[1]]
+    b = [b[0] - o[0], b[1] - o[1]]
+    a = math.atan2(a[1], a[0])
+    b = math.atan2(b[1], b[0])
+    return b > a
 
 
 def plot(polygons, skeleton, center):
@@ -36,6 +48,8 @@ def plot(polygons, skeleton, center):
     plt.grid(which='major', color='black', linestyle='dashed')
 
     for polygon in polygons:
+        if not is_real_area(polygon):
+            continue
         polygon = [[p[0] - center[0], p[1] - center[1]] for p in polygon]
         plt.gca().add_patch(plt.Polygon(polygon, alpha=0.3))
 
@@ -121,7 +135,7 @@ def run(args):
 
         if center[0] != 0.0 or center[1] != 0.0:
             c = {"x": str(center[0]), "y": str(center[1])}
-            f = open(path.replace(".png", "_center.json"), "w", encoding="UTF-8")
+            f = open(path.replace(".png", "_center.json"), "w")
             json.dump(c, f)
             f.close()
 
