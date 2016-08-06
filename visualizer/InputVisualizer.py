@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import argparse
 import json
-import math
 import os
 from fractions import Fraction
 
 import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull
 
 
 def e_format(d):
@@ -21,14 +21,13 @@ def e_format(d):
 
 
 def is_real_area(polygon):
-    o = polygon[0]
-    a = polygon[1]
-    b = polygon[2]
-    a = [a[0] - o[0], a[1] - o[1]]
-    b = [b[0] - o[0], b[1] - o[1]]
-    a = math.atan2(a[1], a[0])
-    b = math.atan2(b[1], b[0])
-    return b > a
+    points = ConvexHull(polygon).vertices
+    n = len(points)
+    cnt = 0
+    for i in range(n):
+        if points[(i + 1) % n] > points[i]:
+            cnt += 1
+    return cnt > 1
 
 
 def plot(polygons, skeleton, center):
