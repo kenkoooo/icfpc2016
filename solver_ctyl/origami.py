@@ -23,19 +23,22 @@ class Origami:
 
     def fold(self, pf, pt): # pfがptに移動するように折る
         pa, pb = self.rotate(pf, pt) # 線分
+        print("pa, pb:", pa, pb)
         la, lb, lc = self.line(pa, pb)
-        for v in self.vertices:
+        for (i, v) in enumerate(self.vertices):
             if self.is_movable(la, lb, lc, v, pf):
-                v = self.line_symmetric(pa, pb, v)
+                print(v, "is movable")
+                self.vertices[i] = self.line_symmetric(pa, pb, v)
+                print("moved to", v)
 
     # 線分 p1 - p2に関して、qに対象な点rの座標を求める.
     def line_symmetric(self, p1, p2, q):
         x1 = p1[0,0]
-        y1 = p1[0,1]
+        y1 = p1[1,0]
         x2 = p2[0,0]
-        y2 = p2[0,1]
+        y2 = p2[1,0]
         xq = q[0,0]
-        yq = q[0,1]
+        yq = q[1,0]
 
         if x1 == x2:
             xr = 2 * x1 - xq
@@ -71,6 +74,7 @@ class Origami:
         a = ay - by
         b = ax - bx
         c = ax * by - ay * bx
+        print("line:", a, b, c)
         return a, b, c
 
     # 直線(a,b,c)に対し点p, qが同じ側にあるかどうか判定
