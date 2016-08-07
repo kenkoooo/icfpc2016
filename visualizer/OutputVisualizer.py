@@ -53,10 +53,7 @@ def plot(polygons, skeleton, center):
     holes = []
     for polygon in polygons:
         polygon = [[p[0] - center[0], p[1] - center[1]] for p in polygon]
-        if not is_real_area(polygon):
-            holes.append(polygon)
-        else:
-            plt.gca().add_patch(plt.Polygon(polygon, alpha=0.3))
+        plt.gca().add_patch(plt.Polygon(polygon, alpha=0.3))
 
     for polygon in holes:
         plt.gca().add_patch(plt.Polygon(polygon, alpha=1.0, color="w"))
