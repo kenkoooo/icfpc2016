@@ -12,7 +12,6 @@ def solve():
     print(origami.edges)
 
 def play(origami = Origami()):
-
     print(origami.vertices[0], origami.vertices[1])
     origami.fold(origami.vertices[0], origami.vertices[1])
 

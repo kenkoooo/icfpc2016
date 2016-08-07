@@ -15,7 +15,7 @@ class Origami:
         self.vertices = [] # 頂点
         self.edges = [] # 辺
 
-    def set_default(self):
+    def set_default(self): # 最初の正方形を生成
         self.polygon_num = 1
         v = [point(0, 0), point(1, 0), point(1, 1), point(0, 1)]
         self.vertices = v
@@ -23,13 +23,9 @@ class Origami:
 
     def fold(self, pf, pt): # pfがptに移動するように折る
         pa, pb = self.rotate(pf, pt) # 線分
-        print("pa, pb:", pa, pb)
-        la, lb, lc = self.line(pa, pb)
         for (i, v) in enumerate(self.vertices):
-            if self.is_movable(la, lb, lc, v, pf):
-                print(v, "is movable")
+            if self.is_movable(pa, pb, v, pf):
                 self.vertices[i] = self.line_symmetric(pa, pb, v)
-                print("moved to", v)
 
     # 線分 p1 - p2に関して、qに対象な点rの座標を求める.
     def line_symmetric(self, p1, p2, q):
@@ -77,23 +73,16 @@ class Origami:
         print("line:", a, b, c)
         return a, b, c
 
-    # 直線(a,b,c)に対し点p, qが同じ側にあるかどうか判定
-    def is_movable(self, a, b, c, p, q):
-        px = p[0,0]
-        py = p[1,0]
-        qx = q[0,0]
-        qy = q[1,0]
+    # 線分pa-pbに対し点p, qが同じ側にあるかどうか判定
 
         return (a * px + b * py + c) * (a * qx + b * qy + c) > 0
-
-
-
-
-
-
-
-
-
+    def is_movable(self, pa, pb, p, q):
+        a, b, c = self.line(a, b)
+        px = p[0, 0]
+        py = p[1, 0]
+        qx = q[0, 0]
+        qy = q[1, 0]
+        return (a * px + b * py + c) * (a * qx + b * qy + c) > 0
 
 
 if __name__ == '__main__':
