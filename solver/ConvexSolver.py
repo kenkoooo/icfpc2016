@@ -6,6 +6,9 @@ from fractions import Fraction
 import numpy as np
 import sympy.geometry as sg
 from scipy.spatial import ConvexHull
+from sympy.geometry.line import Segment
+
+from symmetric_point import symmetric_point
 
 sys.path.append("./")
 from visualizer import InputVisualizer
@@ -23,20 +26,34 @@ def get_symmetric_point(p, edge):
     return [x, y]
 
 
+def is_up(p, edge):
+    x1 = edge[0][0]
+    y1 = edge[0][1]
+    x2 = edge[1][0]
+    y2 = edge[1][1]
+    a = (y1 - y2) / (x1 - x2)
+    k = y1 - a * x1
+    return p[1] - (a * p[0] + k)
+
+
 class PolygonNode:
-    def __init__(self, node_id, edge, is_rotated, vertices, parent_id):
-        self.node_id = node_id
+    def __init__(self, edge, is_rotated, vertices, parent_id):
         self.edge = edge
         self.is_rotated = is_rotated
         self.vertices = vertices
         self.children_ids = []
         self.parent_id = parent_id
+        self.node_id = -1
 
     def has_child(self):
         return len(self.children_ids) > 0
 
+    def set_id(self, node_id):
+        self.node_id = node_id
+
     def split(self, edge, rotate_up):
         """
+        :param edge:
         :param rotate_up: 線より上の部分が回転するかどうか
         :return:
         """
@@ -48,6 +65,51 @@ class PolygonNode:
         polygon = sg.Polygon(*polygon_points)
         new_vertices = sg.intersection(polygon, line)
 
+        up = []
+        down = []
+        on_line = 0
+        for v in self.vertices:
+            check = is_up(v, edge)
+            if check > 0:
+                up.append(v)
+            else:
+                if check == 0:
+                    on_line += 1
+                down.append(v)
+        if on_line == len(down):
+            return None, None
+        nv_cnt = 0
+        for nv in new_vertices:
+            if type(nv) == Segment:
+                continue
+            up.append(nv)
+            down.append(nv)
+            nv_cnt += 1
+        if nv_cnt != 2:
+            return None, None
+
+        if rotate_up:
+            up = [get_symmetric_point(p, edge) for p in up]
+        else:
+            down = [get_symmetric_point(p, edge) for p in down]
+
+        up_polygon = PolygonNode(edge, rotate_up, up, self.node_id)
+        down_polygon = PolygonNode(edge, not rotate_up, down, self.node_id)
+
+        # GC
+        self.vertices = []
+
+        return up_polygon, down_polygon
+
+    def add_child(self, child_id):
+        self.children_ids.append(child_id)
+
+    def get_id(self):
+        return self.node_id
+
+    def get_parent_id(self):
+        return self.parent_id
+
 
 def rotate(a, b, c, p):
     m = np.matrix([
@@ -58,16 +120,6 @@ def rotate(a, b, c, p):
     v = v.T
     v = m * v
     return [v[0, 0], v[1, 0]]
-
-
-def is_up(p, edge):
-    x1 = edge[0][0]
-    y1 = edge[0][1]
-    x2 = edge[1][0]
-    y2 = edge[1][1]
-    a = (y1 - y2) / (x1 - x2)
-    k = y1 - a * x1
-    return p[1] - (a * p[0] + k)
 
 
 def is_all_near_up(vs, edge):
@@ -87,55 +139,52 @@ def is_all_near_up(vs, edge):
     return up > down
 
 
-def symmetric_point(x1, y1, x2, y2, xq, yq):
-    if x1 == x2:
-        xr = 2 * x1 - xq
-        yr = yq
-
-        return xr, yr
-
-    if y1 == y2:
-        xr = xq
-        yr = 2 * y1 - yq
-
-        return xr, yr
-
-    a = (y2 - y1) / (x2 - x1)
-    b = -1
-    c = y2 - x2 * (y2 - y1) / (x2 - x1)
-
-    xr = xq - 2 * a * (a * xq + b * yq + c) / (a ** 2 + b ** 2)
-    yr = yq - 2 * b * (a * xq + b * yq + c) / (a ** 2 + b ** 2)
-
-    return xr, yr
-
-
-def get_symmetric_point(p, edge):
-    x, y = symmetric_point(
-        edge[0][0],
-        edge[0][1],
-        edge[1][0],
-        edge[1][1],
-        p[0],
-        p[1]
-    )
-    return [x, y]
-
-
-def make_origami(vs, facets, edge, up_flag, lot):
-    line = sg.Line(edge)
-    broken = []
-    for i in range(len(facets)):
-        facet = facets[i]
-        polygon = sg.Polygon(facet)
-        intersections = sg.intersection(line, polygon)
-        if len(intersections) == 0:
+def make_origami(polygon_nodes, edge, rotate_up):
+    """
+    polygon_nodes の中の PolygonNode のうち、線と衝突するものを折る。
+    線の上側を折り返すときは rotate_up を True にする。
+    :param polygon_nodes:
+    :param edge:
+    :param rotate_up:
+    :return:
+    """
+    size = len(polygon_nodes)
+    for parent_id in range(size):
+        if polygon_nodes[parent_id].has_child():
             continue
-        broken.append(i)
-        for p in intersections:
-            x = p.x
-            y = p.y
-            vs.append([x, y])
+        poly1, poly2 = polygon_nodes[parent_id].split(edge, rotate_up)
+        if not poly1:
+            continue
+
+        poly1.set_id(len(polygon_nodes))
+        polygon_nodes.append(poly1)
+
+        poly2.set_id(len(polygon_nodes))
+        polygon_nodes.append(poly2)
+
+        polygon_nodes[parent_id].add_child(poly1.get_id())
+        polygon_nodes[parent_id].add_child(poly2.get_id())
+    return polygon_nodes
+
+
+def rollback_polygon_tree(polygon_nodes):
+    facets = []
+    sources = []
+    for polygon_node in polygon_nodes:
+        if polygon_node.has_child():
+            continue
+        node_id = polygon_node.get_id()
+        vertices = polygon_node.vertices
+        destiny = [v for v in vertices]
+        while node_id > 0:
+            p = polygon_nodes[node_id]
+            edge = p.edge
+            if p.is_rotated:
+                vertices = [get_symmetric_point(v, edge) for v in vertices]
+            node_id = p.parent_id
+        facets.append(destiny)
+        sources.append(vertices)
+    return facets, sources
 
 
 def solve(polygon):
@@ -147,25 +196,26 @@ def solve(polygon):
         y += polygon[i][1]
     x /= len(ids)
     y /= len(ids)
-    center = [x / 2, y / 2]
+    x /= 2
+    y /= 2
 
-    vs = [
-        [Fraction(0), Fraction(0)],
-        [Fraction(1), Fraction(0)],
-        [Fraction(0), Fraction(1)],
-        [Fraction(1), Fraction(1)]
-    ]
-
-    facets = [
-        [0, 1, 2, 3]
-    ]
+    polygon_nodes = [PolygonNode([], False, [
+        [x - Fraction(1, 2), y - Fraction(1, 2)],
+        [x - Fraction(1, 2), y + Fraction(1, 2)],
+        [x + Fraction(1, 2), y - Fraction(1, 2)],
+        [x + Fraction(1, 2), y + Fraction(1, 2)]
+    ], -1)]
+    polygon_nodes[0].set_id(0)
 
     for i in range(len(ids)):
         pos = ids[i]
         nex = ids[(i + 1) % len(ids)]
         edge = [polygon[pos], polygon[nex]]
-        if is_all_near_up(polygon):
-            up = True
+        if is_all_near_up(polygon, edge):
+            rotate_up = False
+        else:
+            rotate_up = True
+        polygon_nodes = make_origami(polygon_nodes, edge, rotate_up)
 
 
 def run(args):
@@ -176,8 +226,7 @@ def run(args):
         polygons, skeleton, center = InputVisualizer.read_input(lines)
         for polygon in polygons:
             if InputVisualizer.is_real_area(polygon):
-                solve(polygon)
-                break
+                pass
 
 
 if __name__ == '__main__':
