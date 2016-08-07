@@ -1,11 +1,18 @@
-# -*- coding: utf-8 -*-
-import matplotlib as mp
 import os, re
-from origami import Origami
+from origami import Origami, point, edge
 from fractions import Fraction
+import numpy as np
+
 
 def solve():
 	origami = load()
+	play(origami)
+
+def play(model):
+    print(model.vertices[0], model.vertices[1])
+    pf, pt = model.rotate(model.vertices[0], model.vertices[1])
+    print(pf, pt)
+    return pf, pt
 
 
 def load():
@@ -23,12 +30,14 @@ def load():
 	v_num = map(int, f.readline().split())[0]
 	for i in range(v_num):
 		v = f.readline().split(',')
-		origami.vertices.append([Fraction(v[0]), Fraction(v[1])])
+		origami.vertices.append(point(Fraction(v[0]), Fraction(v[1])))
 	e_num = map(int, f.readline().split())[0]
 	for i in range(e_num):
 		e = re.split('[, ]', f.readline())
-		origami.edges.append([[Fraction(e[0]), Fraction(e[1])],[Fraction(e[2]), Fraction(e[3])]])
+		origami.edges.append([edge(Fraction(e[0]), Fraction(e[1])), edge(Fraction(e[2]), Fraction(e[3]))])
 	f.close()
+	# print(origami.vertices)
+	# print(origami.edges)
 	return origami
 
 
