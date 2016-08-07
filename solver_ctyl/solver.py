@@ -42,6 +42,7 @@ def load():
     return origami
 
 
+
 if __name__ == '__main__':
     solve()
     print("done")

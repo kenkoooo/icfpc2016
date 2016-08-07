@@ -74,10 +74,8 @@ class Origami:
         return a, b, c
 
     # 線分pa-pbに対し点p, qが同じ側にあるかどうか判定
-
-        return (a * px + b * py + c) * (a * qx + b * qy + c) > 0
     def is_movable(self, pa, pb, p, q):
-        a, b, c = self.line(a, b)
+        a, b, c = self.line(pa, pb)
         px = p[0, 0]
         py = p[1, 0]
         qx = q[0, 0]
