@@ -23,7 +23,7 @@ def load():
 	v_num = map(int, f.readline().split())[0]
 	for i in range(v_num):
 		v = f.readline().split(',')
-		origami.vertecies.append([Fraction(v[0]), Fraction(v[1])])
+		origami.vertices.append([Fraction(v[0]), Fraction(v[1])])
 	e_num = map(int, f.readline().split())[0]
 	for i in range(e_num):
 		e = re.split('[, ]', f.readline())
